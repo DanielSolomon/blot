@@ -1,6 +1,6 @@
 import setuptools
 
-with open('requirements.txt', 'rb') as reader:
+with open('requirements.txt', 'r') as reader:
     reqs = reader.read().splitlines()
 
 setuptools.setup(
