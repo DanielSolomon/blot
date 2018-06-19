@@ -1,3 +1,3 @@
 
-def test_blot():
+def test_pyshart():
     pass
