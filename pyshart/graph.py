@@ -2,15 +2,61 @@
 Graph module that contains the Graph class and the Point namedtuple.
 Provides utilities to save and format graph information.
 """
-################################################################################################
-# CR (Daniel): CREATE `test_graph.py` SCRIPT IN TESTS DIRECTORY AND TEST YOUR CODE, YOU SILLY. #
-################################################################################################
+import typing
+import dataclasses
 
-# CR (Daniel): Dude don't use from ... import ..., confusing as fuck (use from ... import ... only when you import something inside the package).
-from collections import namedtuple
+QUARTER1 = 1
+QUARTER2 = 2
+QUARTER3 = 3
+QUARTER4 = 4
 
-# CR (Daniel): Consider Point class, so we can easily get the quarter it points.
-Point = namedtuple('Point', ['x', 'y'])
+
+@dataclasses.dataclass
+class Point:
+    """
+    Point dataclass that holds 'x' and 'y' value on a graph.
+    """
+    x: int
+    y: int
+    quarter: int = dataclasses.field(init=False)
+
+    def __post_init__(self):
+        if self.x >= 0:
+            if self.y >= 0:
+                self.quarter = QUARTER1
+            else:
+                self.quarter = QUARTER4
+        if self.x < 0:
+            if self.y > 0:
+                self.quarter = QUARTER2
+            else:
+                self.quarter = QUARTER3
+
+    def __mul__(self, multiplier: int) -> 'Point':
+        """
+        Multiply (aka scale) the point by 'multiplier'.
+
+        :param multiplier: scale multiplier.
+        :type multiplier: int
+        :return: Newly scales Point.
+        :rtype: Point
+        """
+        return Point(self.x * multiplier, self.y * multiplier)
+
+    __rmul__ = __mul__
+
+    def scale(self, x: int, y: int) -> None:
+        """
+        Scale self by multiplying 'x' and 'y' with the relating point values.
+
+        :param x: 'x' multiplier.
+        :type x: int
+        :param y: 'y' multiplier
+        :type y: int
+        :rtype: None
+        """
+        self.x *= x
+        self.y *= y
 
 
 class Graph:
@@ -19,11 +65,10 @@ class Graph:
 
     :raises IndexError: illegal access to the underlying array (index out of bounds).
     """
-
     def __init__(
             self,
-            length_x: int,
-            length_y: int,
+            height_x: int,
+            height_y: int,
             step_x: int,
             step_y: int,
             normalizer_x: int,
@@ -31,53 +76,62 @@ class Graph:
             negative_x: bool,
             negative_y: bool
     ):
-        self.length_x = length_x
-        self.length_y = length_y
+        self.height_x = height_x
+        self.height_y = height_y
         self.step_x = step_x
         self.step_y = step_y
         self.normalizer_x = normalizer_x
         self.normalizer_y = normalizer_y
         self.negative_x = negative_x
         self.negative_y = negative_y
-        self.width = (length_x*2 if negative_x else length_x) + 1
-        # CR (Daniel): height?
-        self.length = (length_y*2 if negative_y else length_y) + 1
-        self.graph = [[' ']*(self.width) for _ in range(self.length)]
+        self.width = (height_x*2 if negative_x else height_x) + 1
+        self.height = (height_y*2 if negative_y else height_y) + 1
+        self.graph = [[' ']*(self.width) for _ in range(self.height)]
         self[(0, 0)] = '0'
-        # CR (Daniel): Make some space between self assignments and rest of the code.
-        for i in range(self.length_x):
+
+        for i in range(self.height_x):
             self[(i+1, 0)] = str(int(self.step_x * (i+1)) % self.normalizer_x)
             if self.negative_x:
                 self[(-(i+1), 0)] = str(int(self.step_x * (i+1)) % self.normalizer_x)
-        for i in range(self.length_y):
+        for i in range(self.height_y):
             self[(0, i+1)] = str(int(self.step_y * (i+1)) % self.normalizer_y)
             if self.negative_y:
                 self[(0, -(i+1))] = str(int(self.step_y * (i+1)) % self.normalizer_y)
 
     def __getitem__(self, point: Point) -> str:
-        # CR (Daniel): Why?
-        point = Point(*point)
-        # CR (Daniel): Why? Try to index it, if it fails, it will raise IndexError...
-        if (point.x < 0 and not self.negative_x) or (point.y < 0 and not self.negative_y):
-            raise IndexError("Illegal negative index value supplied!")
-        if not -self.length_x <= point.x <= self.length_x or not -self.length_y <= point.y <= self.length_y:
-            raise IndexError("Index value out of bounds!")
+        self.validate_point(point=Point)
         true_x = point.x + int(self.width / 2) if self.negative_x else point.x
-        true_y = point.y + int(self.length / 2) if self.negative_y else point.y
+        true_y = point.y + int(self.height / 2) if self.negative_y else point.y
         return self.graph[true_y][true_x]
 
     def __setitem__(self, point: Point, char: str) -> None:
-        point = Point(*point)
-        # CR (Daniel): Same.
-        if (point.x < 0 and not self.negative_x) or (point.y < 0 and not self.negative_y):
-            raise IndexError("Illegal negative index value supplied!")
-        if not -self.length_x <= point.x <= self.length_x or not -self.length_y <= point.y <= self.length_y:
-            raise IndexError("Index value out of bounds!")
+        self.validate_point(point=Point)
         true_x = point.x + int(self.width / 2) if self.negative_x else point.x
-        true_y = point.y + int(self.length / 2) if self.negative_y else point.y
+        true_y = point.y + int(self.height / 2) if self.negative_y else point.y
         self.graph[true_y][true_x] = char
 
-    # CR (Daniel): Write _draw function which returns the list represents the graph, then draw will only call it, join it and print it (will be useful for tests).
+    def validate_point(self, point: Point) -> None:
+        """
+        Validate a given point against the graph.
+
+        :param point: Point to check against the graph.
+        :type point: Point
+        :raises IndexError: if the Point has an illegal index (negative / out of bounds), raise.
+        :rtype: None
+        """
+        if (point.x < 0 and not self.negative_x) or (point.y < 0 and not self.negative_y):
+            raise IndexError("Illegal negative index value supplied!")
+        if not -self.height_x <= point.x <= self.height_x or not -self.height_y <= point.y <= self.height_y:
+            raise IndexError("Index value out of bounds!")
+
+    def _draw(self) -> typing.List[str]:
+        """
+        Create a list of strings that represents the graph.
+
+        :return: list of strings representing rows within the graph.
+        :rtype: typing.List[str]
+        """
+        return [''.join(self.graph[i]) for i in range(len(self.graph))][::-1]
 
     def draw(self) -> None:
         """
@@ -86,4 +140,4 @@ class Graph:
         :return: this function only prints.
         :rtype: None
         """
-        print('\n'.join([''.join(self.graph[i]) for i in range(len(self.graph))][::-1]))
+        print('\n'.join(self._draw()))
