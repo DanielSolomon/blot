@@ -2,14 +2,35 @@
 Graph module that contains the Graph class and the Point namedtuple.
 Provides utilities to save and format graph information.
 """
-import typing
 import dataclasses
+import enum
+import typing
 
-QUARTER1 = 1
-QUARTER2 = 2
-QUARTER3 = 3
-QUARTER4 = 4
+class Quarter(enum.IntFlag):
+    """
+    Quarter bitwise enum.
+    """
+    QUARTER1    = 1
+    QUARTER2    = 2
+    QUARTER3    = 4
+    QUARTER4    = 8
+    NORTH_PLANE = QUARTER1 | QUARTER2
+    WEST_PLANE  = QUARTER2 | QUARTER3
+    SOUTH_PLANE = QUARTER3 | QUARTER4
+    EAST_PLANE  = QUARTER4 | QUARTER1
+    WHOLE_PLANE = NORTH_PLANE | SOUTH_PLANE
 
+    @property
+    def plane(self) -> Quarter
+        """
+        Plane property is the closet plane that contains the sub-planes.
+
+        :return: The closet quarter (sub-plane).
+        :rtype: Quarter.
+        """
+        if self.name is None:
+            return Quarter.WHOLE_PLANE
+        return self
 
 @dataclasses.dataclass
 class Point:
@@ -23,14 +44,14 @@ class Point:
     def __post_init__(self):
         if self.x >= 0:
             if self.y >= 0:
-                self.quarter = QUARTER1
+                self.quarter = Quarter.QUARTER1
             else:
-                self.quarter = QUARTER4
+                self.quarter = Quarter.QUARTER4
         if self.x < 0:
             if self.y > 0:
-                self.quarter = QUARTER2
+                self.quarter = Quarter.QUARTER2
             else:
-                self.quarter = QUARTER3
+                self.quarter = Quarter.QUARTER3
 
     def __mul__(self, multiplier: int) -> 'Point':
         """
@@ -57,6 +78,7 @@ class Point:
         """
         self.x *= x
         self.y *= y
+        return self
 
 
 class Graph:
@@ -76,6 +98,8 @@ class Graph:
             negative_x: bool,
             negative_y: bool
     ):
+        # TODO: (Daniel) Replace negative vars with get pos_width, neg_width, pos_height, neg_height with default values.
+        #                The main reason is that the graph may not be symmetric.
         self.height_x = height_x
         self.height_y = height_y
         self.step_x = step_x
@@ -99,18 +123,18 @@ class Graph:
                 self[(0, -(i+1))] = str(int(self.step_y * (i+1)) % self.normalizer_y)
 
     def __getitem__(self, point: Point) -> str:
-        self.validate_point(point=Point)
+        self._validate_point(point=Point)
         true_x = point.x + int(self.width / 2) if self.negative_x else point.x
         true_y = point.y + int(self.height / 2) if self.negative_y else point.y
         return self.graph[true_y][true_x]
 
     def __setitem__(self, point: Point, char: str) -> None:
-        self.validate_point(point=Point)
+        self._validate_point(point=Point)
         true_x = point.x + int(self.width / 2) if self.negative_x else point.x
         true_y = point.y + int(self.height / 2) if self.negative_y else point.y
         self.graph[true_y][true_x] = char
 
-    def validate_point(self, point: Point) -> None:
+    def _validate_point(self, point: Point) -> None:
         """
         Validate a given point against the graph.
 
