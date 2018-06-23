@@ -6,6 +6,7 @@ import dataclasses
 import enum
 import typing
 
+
 class Quarter(enum.IntFlag):
     """
     Quarter bitwise enum.
@@ -31,6 +32,7 @@ class Quarter(enum.IntFlag):
         if self.name is None:
             return Quarter.WHOLE_PLANE
         return self
+
 
 @dataclasses.dataclass
 class Point:
@@ -124,15 +126,26 @@ class Graph:
 
     def __getitem__(self, point: Point) -> str:
         self._validate_point(point=Point)
-        true_x = point.x + int(self.width / 2) if self.negative_x else point.x
-        true_y = point.y + int(self.height / 2) if self.negative_y else point.y
-        return self.graph[true_y][true_x]
+        return self[self._transform_true_point(point=point)]
 
     def __setitem__(self, point: Point, char: str) -> None:
         self._validate_point(point=Point)
+        self[self._transform_true_point(point=point)] = char
+
+    def __delitem__(self, point: Point) -> None:
+        self._validate_point(point=Point)
+        self[self._transform_true_point(point=point)] = ' '
+
+    def _transform_true_point(self, point: Point) -> 'Point':
+        """
+        Construct a "true value" for the given Point in relation to the graph.
+
+        :return: the constructed true Point.
+        :rtype: Point
+        """
         true_x = point.x + int(self.width / 2) if self.negative_x else point.x
         true_y = point.y + int(self.height / 2) if self.negative_y else point.y
-        self.graph[true_y][true_x] = char
+        return Point(true_x, true_y)
 
     def _validate_point(self, point: Point) -> None:
         """
