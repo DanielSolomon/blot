@@ -77,7 +77,21 @@ def test_quarter(posnum1: int, posnum2: int, negnum1: int, negnum2: int) -> None
     q3 = pyshart.graph.Point(negnum1, negnum2)
     q4 = pyshart.graph.Point(posnum1, negnum2)
 
-    assert q1.quarter == pyshart.graph.QUARTER1
-    assert q2.quarter == pyshart.graph.QUARTER2
-    assert q3.quarter == pyshart.graph.QUARTER3
-    assert q4.quarter == pyshart.graph.QUARTER4
+    assert q1.quarter == pyshart.graph.Quarter.QUARTER1
+    assert q2.quarter == pyshart.graph.Quarter.QUARTER2
+    assert q3.quarter == pyshart.graph.Quarter.QUARTER3
+    assert q4.quarter == pyshart.graph.Quarter.QUARTER4
+
+    assert (q1.quarter | q2.quarter).plane == pyshart.graph.Quarter.NORTH_PLANE
+    assert (q1.quarter | q3.quarter).plane == pyshart.graph.Quarter.WHOLE_PLANE
+    assert (q1.quarter | q4.quarter).plane == pyshart.graph.Quarter.EAST_PLANE
+    assert (q2.quarter | q3.quarter).plane == pyshart.graph.Quarter.WEST_PLANE
+    assert (q2.quarter | q4.quarter).plane == pyshart.graph.Quarter.WHOLE_PLANE
+    assert (q3.quarter | q4.quarter).plane == pyshart.graph.Quarter.SOUTH_PLANE
+
+    assert (q1.quarter | q2.quarter | q3.quarter).plane == pyshart.graph.Quarter.WHOLE_PLANE
+    assert (q1.quarter | q2.quarter | q3.quarter).plane == pyshart.graph.Quarter.WHOLE_PLANE
+    assert (q1.quarter | q2.quarter | q3.quarter).plane == pyshart.graph.Quarter.WHOLE_PLANE
+    assert (q1.quarter | q2.quarter | q3.quarter).plane == pyshart.graph.Quarter.WHOLE_PLANE
+
+    assert (q1.quarter | q2.quarter | q3.quarter | q4.quarter).plane == pyshart.graph.Quarter.WHOLE_PLANE

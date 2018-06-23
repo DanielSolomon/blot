@@ -21,7 +21,7 @@ class Quarter(enum.IntFlag):
     WHOLE_PLANE = NORTH_PLANE | SOUTH_PLANE
 
     @property
-    def plane(self) -> Quarter
+    def plane(self) -> 'Quarter'
         """
         Plane property is the closet plane that contains the sub-planes.
 
