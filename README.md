@@ -1,2 +1,2 @@
-pychart
+pyshart
 =======
