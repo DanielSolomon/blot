@@ -5,7 +5,7 @@ import pyshart.color
 import random
 import string
 
-from .test_point import pos_number
+from pyshart.tests.test_point import pos_number
 
 FORES   = colorama.Fore.__dict__.keys()
 BACKS   = colorama.Back.__dict__.keys()
