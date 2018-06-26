@@ -1,6 +1,6 @@
-import random
 import pytest
 import pyshart.graph
+import random
 
 
 @pytest.fixture

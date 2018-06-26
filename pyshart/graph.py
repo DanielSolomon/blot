@@ -133,7 +133,7 @@ class Graph:
         self[self._transform_true_point(point=point)] = char
 
     def __delitem__(self, point: Point) -> None:
-        self._validate_point(point=Point)
+        self._validate_point(point=point)
         self[self._transform_true_point(point=point)] = ' '
 
     def _transform_true_point(self, point: Point) -> 'Point':
@@ -143,8 +143,8 @@ class Graph:
         :return: the constructed true Point.
         :rtype: Point
         """
-        true_x = point.x + int(self.width / 2) if self.negative_x else point.x
-        true_y = point.y + int(self.height / 2) if self.negative_y else point.y
+        true_x = point.x + self.width  // 2 if self.negative_x else point.x
+        true_y = point.y + self.height // 2 if self.negative_y else point.y
         return Point(true_x, true_y)
 
     def _validate_point(self, point: Point) -> None:
