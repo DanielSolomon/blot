@@ -4,7 +4,10 @@ Provides utilities to save and format graph information.
 """
 import dataclasses
 import enum
+import math
 import typing
+
+from . import color
 
 
 class Quarter(enum.IntFlag):
@@ -43,7 +46,7 @@ class Point:
     y: int
     quarter: int = dataclasses.field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.x >= 0:
             if self.y >= 0:
                 self.quarter = Quarter.QUARTER1
@@ -82,6 +85,35 @@ class Point:
         self.y *= y
         return self
 
+@dataclasses.dataclass
+class VisualPoint(Point):
+    """
+    VisualPoint dataclass that holds the point 'token' and the point 'color'.
+    """
+    token : str = 'X'
+    fore  : str = ''
+    back  : str = ''
+    style : str = ''
+
+    def __post_init__(self):
+        # Interesting, if you do not call explicitly your super __post_init__ function it won't be invoked...
+        super().__post_init__()
+        if len(self.token) != 1:
+            raise ValueError('token length must be of size 1')
+
+    def tokenize(self) -> color.ColoredString:
+        """tokenize returns the point's colored token.
+        
+        :rtype: color.ColoredString
+        """
+
+        return color.ColoredString(
+            value   = self.token, 
+            fore    = self.fore,
+            back    = self.back,
+            style   = self.style,
+        )
+
 
 class Graph:
     """
@@ -91,6 +123,7 @@ class Graph:
     """
     def __init__(
             self,
+            points  : typing.List[VisualPoint],
             height_x: int,
             height_y: int,
             step_x: int,
@@ -102,6 +135,7 @@ class Graph:
     ):
         # TODO: (Daniel) Replace negative vars with get pos_width, neg_width, pos_height, neg_height with default values.
         #                The main reason is that the graph may not be symmetric.
+        self.points   = points
         self.height_x = height_x
         self.height_y = height_y
         self.step_x = step_x
@@ -124,17 +158,25 @@ class Graph:
             if self.negative_y:
                 self[(0, -(i+1))] = str(int(self.step_y * (i+1)) % self.normalizer_y)
 
+        for point in self.points:
+            # Meanwhile collisions are not solved (last point overrides).
+            # TODO: (Daniel): Solve collisions.
+            self[point] = str(point.tokenize())
+
     def __getitem__(self, point: Point) -> str:
-        self._validate_point(point=Point)
-        return self[self._transform_true_point(point=point)]
+        point = self._validate_point(point=point)
+        point = self._transform_true_point(point=point)
+        return self.graph[point.x][point.y]
 
     def __setitem__(self, point: Point, char: str) -> None:
-        self._validate_point(point=Point)
-        self[self._transform_true_point(point=point)] = char
+        point = self._validate_point(point=point)
+        point = self._transform_true_point(point=point)
+        self.graph[point.x][point.y] = char
 
     def __delitem__(self, point: Point) -> None:
-        self._validate_point(point=point)
-        self[self._transform_true_point(point=point)] = ' '
+        point = self._validate_point(point=point)
+        point = self._transform_true_point(point=point)
+        self.graph[point.x][point.y] = ' '
 
     def _transform_true_point(self, point: Point) -> 'Point':
         """
@@ -156,10 +198,13 @@ class Graph:
         :raises IndexError: if the Point has an illegal index (negative / out of bounds), raise.
         :rtype: None
         """
+        if isinstance(point, (tuple, list)):
+            point = Point(*point)
         if (point.x < 0 and not self.negative_x) or (point.y < 0 and not self.negative_y):
             raise IndexError("Illegal negative index value supplied!")
         if not -self.height_x <= point.x <= self.height_x or not -self.height_y <= point.y <= self.height_y:
             raise IndexError("Index value out of bounds!")
+        return point
 
     def _draw(self) -> typing.List[str]:
         """
