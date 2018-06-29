@@ -102,8 +102,9 @@ class VisualPoint(Point):
             raise ValueError('token length must be of size 1')
 
     def tokenize(self) -> color.ColoredString:
-        """tokenize returns the point's colored token.
-        
+        """
+        Tokenize returns the point's colored token.
+
         :rtype: color.ColoredString
         """
 
@@ -223,3 +224,4 @@ class Graph:
         :rtype: None
         """
         print('\n'.join(self._draw()))
+
